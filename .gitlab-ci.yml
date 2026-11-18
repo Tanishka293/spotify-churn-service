@@ -5,7 +5,7 @@ stages:
   - security
 
 variables:
-  PYTHON_IMAGE: "python:3.10-slim"
+  PYTHON_IMAGE: "python:3.13-slim"
   IMAGE_TAG: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
@@ -31,7 +31,7 @@ unit-test-job:
   image: $PYTHON_IMAGE
   before_script:
     - pip install --upgrade pip
-    - pip install -r requirements.txt pytest
+    - pip install -r requirements.txt pytest httpx
   script:
     - python -m pytest tests/ -v
   artifacts:

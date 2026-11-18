@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1: Base image with security hardening and non-root user
 # -----------------------------------------------------------------------------
-FROM python:3.10-slim
+FROM python:3.13-slim
 
 # Prevent Python from writing .pyc files and enable unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1 \
