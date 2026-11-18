@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spotify-churn-config
+  labels:
+    app.kubernetes.io/name: spotify-churn-service
+    app.kubernetes.io/part-of: spotify-ml-platform
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  PORT: "8000"
+  CHURN_THRESHOLD: "0.5"
+  HIGH_RISK_THRESHOLD: "0.3"
+  ENABLE_TELEMETRY: "true"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://signoz-otel-collector.signoz.svc.cluster.local:4318"

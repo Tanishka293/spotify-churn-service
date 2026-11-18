@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify Churn Prediction Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Circular+Std:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --spotify-green: #1DB954;
+      --spotify-green-hover: #1ed760;
+      --spotify-dark: #121212;
+      --spotify-card: #181818;
+      --spotify-card-hover: #282828;
+      --spotify-subtext: #b3b3b3;
+      --danger-red: #E91429;
+      --warning-yellow: #FFA42B;
+      --border-color: #2a2a2a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--spotify-dark);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #000000;
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      fill: var(--spotify-green);
+    }
+
+    .brand h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #444;
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 500px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-outline:hover {
+      border-color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 32px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      flex: 1;
+    }
+
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--spotify-card);
+      border-radius: 12px;
+      padding: 28px;
+      border: 1px solid var(--border-color);
+    }
+
+    .card h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .card p.desc {
+      color: var(--spotify-subtext);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+    }
+
+    .presets {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .btn-preset {
+      background: #2a2a2a;
+      border: none;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-preset:hover {
+      background: #383838;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+    }
+
+    .form-control {
+      width: 100%;
+      background: #222222;
+      border: 1px solid #333333;
+      border-radius: 6px;
+      color: #ffffff;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--spotify-green);
+    }
+
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .range-wrap input[type=range] {
+      flex: 1;
+      accent-color: var(--spotify-green);
+    }
+
+    .range-val {
+      min-width: 50px;
+      text-align: right;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--spotify-green);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--spotify-green);
+      color: #000000;
+      border: none;
+      padding: 14px;
+      border-radius: 500px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: transform 0.1s, background-color 0.2s;
+    }
+
+    .btn-submit:hover {
+      background: var(--spotify-green-hover);
+      transform: scale(1.01);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.99);
+    }
+
+    /* Result Panel */
+    .result-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .gauge-card {
+      width: 100%;
+      max-width: 380px;
+      background: #222222;
+      border-radius: 16px;
+      padding: 32px 24px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 24px;
+    }
+
+    .prob-number {
+      font-size: 3.5rem;
+      font-weight: 900;
+      margin: 12px 0 4px;
+      letter-spacing: -1px;
+    }
+
+    .prob-label {
+      color: var(--spotify-subtext);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: #333333;
+      border-radius: 10px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 10px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.6s;
+    }
+
+    .badge-wrap {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-renew {
+      background: rgba(29, 185, 84, 0.15);
+      color: var(--spotify-green);
+      border: 1px solid var(--spotify-green);
+    }
+
+    .badge-churn {
+      background: rgba(233, 20, 41, 0.15);
+      color: var(--danger-red);
+      border: 1px solid var(--danger-red);
+    }
+
+    .badge-risk {
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+
+    .meta-box {
+      width: 100%;
+      max-width: 380px;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 0.8rem;
+      color: var(--spotify-subtext);
+      text-align: left;
+      line-height: 1.6;
+    }
+
+    .meta-box span {
+      color: #fff;
+      font-family: monospace;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--spotify-subtext);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border-color);
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="brand">
+      <svg class="brand-logo" viewBox="0 0 24 24">
+        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.502 17.31c-.216.353-.675.467-1.028.25-2.816-1.721-6.36-2.111-10.536-1.157-.404.092-.81-.16-.902-.564-.092-.404.16-.81.564-.902 4.57-1.045 8.497-.604 11.652 1.345.353.217.467.676.25 1.028zm1.47-3.268c-.272.441-.85.58-1.291.308-3.223-1.982-8.136-2.554-11.948-1.397-.497.151-1.03-.134-1.181-.631-.151-.497.134-1.03.631-1.181 4.364-1.324 9.775-.683 13.481 1.61.441.272.58.85.308 1.291zm.126-3.41c-3.864-2.295-10.245-2.507-13.923-1.391-.593.18-1.222-.162-1.402-.755-.18-.593.162-1.222.755-1.402 4.237-1.286 11.279-1.038 15.717 1.597.533.316.708 1.008.392 1.541-.316.533-1.008.708-1.539.41z"/>
+      </svg>
+      <h1>Spotify Churn Predictor</h1>
+    </div>
+    <div class="nav-links">
+      <a href="/docs" target="_blank" class="btn-outline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Swagger API Docs
+      </a>
+      <a href="/health/ready" target="_blank" class="btn-outline">
+        ● Health Probe
+      </a>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Left Column: Input Form -->
+    <div class="card">
+      <h2>Subscriber Profile</h2>
+      <p class="desc">Simulate user engagement metrics or pick a quick test scenario below.</p>
+
+      <div class="presets">
+        <button type="button" class="btn-preset" onclick="loadPreset('loyal')">🟢 Loyal Subscriber</button>
+        <button type="button" class="btn-preset" onclick="loadPreset('atrisk')">🟡 Moderate Risk</button>
+        <button type="button" class="btn-preset" onclick="loadPreset('churn')">🔴 High Churn Risk</button>
+      </div>
+
+      <form id="predictionForm" onsubmit="submitPrediction(event)">
+        <div class="form-group">
+          <label>User ID</label>
+          <input type="text" id="user_id" class="form-control" value="SPOT-78241" required>
+        </div>
+
+        <div class="form-group">
+          <label>Listening Hours / Week: <span id="hoursVal" class="range-val">16.0 hrs</span></label>
+          <div class="range-wrap">
+            <input type="range" id="listening_hours" min="0" max="50" step="0.5" value="16.0" oninput="updateVal('hoursVal', this.value + ' hrs')">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Song Skip Rate: <span id="skipVal" class="range-val">15%</span></label>
+          <div class="range-wrap">
+            <input type="range" id="skip_rate" min="0.0" max="1.0" step="0.01" value="0.15" oninput="updateVal('skipVal', Math.round(this.value * 100) + '%')">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Playlists Created</label>
+          <input type="number" id="playlists_created" class="form-control" min="0" value="6" required>
+        </div>
+
+        <div class="form-group">
+          <label>Days Since Last Login</label>
+          <input type="number" id="days_since_login" class="form-control" min="0" value="1" required>
+        </div>
+
+        <div class="form-group">
+          <label>Subscription Tier</label>
+          <select id="subscription_tier" class="form-control">
+            <option value="Individual" selected>Individual ($10.99/mo)</option>
+            <option value="Student">Student ($5.99/mo)</option>
+            <option value="Family">Family ($16.99/mo)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Auto-Renewal Status</label>
+          <select id="auto_renewal" class="form-control">
+            <option value="1" selected>Enabled (1)</option>
+            <option value="0">Disabled (0)</option>
+          </select>
+        </div>
+
+        <button type="submit" id="btnPredict" class="btn-submit">Compute Churn Prediction</button>
+      </form>
+    </div>
+
+    <!-- Right Column: Prediction Results -->
+    <div class="card result-container">
+      <h2>ML Inference Output</h2>
+      <p class="desc">Real-time prediction powered by the trained XGBoost Pipeline.</p>
+
+      <div class="gauge-card">
+        <div class="prob-label">Renewal Probability</div>
+        <div id="probText" class="prob-number" style="color: var(--spotify-green);">--%</div>
+        <div class="progress-bar-bg">
+          <div id="probBar" class="progress-bar-fill" style="width: 0%; background-color: var(--spotify-green);"></div>
+        </div>
+        <div class="badge-wrap">
+          <div id="predBadge" class="badge badge-renew">Waiting for input...</div>
+          <div id="riskBadge" class="badge badge-risk">Risk: --</div>
+        </div>
+      </div>
+
+      <div class="meta-box">
+        <div class="meta-row">
+          <div>Audited Request ID:</div>
+          <span id="metaRequestId">None</span>
+        </div>
+        <div class="meta-row">
+          <div>Inference Latency:</div>
+          <span id="metaLatency">-- ms</span>
+        </div>
+        <div class="meta-row">
+          <div>Persistence Status:</div>
+          <span style="color: var(--spotify-green);">Logged to SQLite DB</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Spotify Churn Prediction Microservice &bull; Production XGBoost Pipeline &bull; FastAPI + Docker + Kubernetes
+  </footer>
+
+  <script>
+    function updateVal(elemId, value) {
+      document.getElementById(elemId).textContent = value;
+    }
+
+    function loadPreset(type) {
+      if (type === 'loyal') {
+        document.getElementById('user_id').value = 'SPOT-' + Math.floor(10000 + Math.random() * 90000);
+        document.getElementById('listening_hours').value = 24.0;
+        updateVal('hoursVal', '24.0 hrs');
+        document.getElementById('skip_rate').value = 0.08;
+        updateVal('skipVal', '8%');
+        document.getElementById('playlists_created').value = 12;
+        document.getElementById('days_since_login').value = 0;
+        document.getElementById('auto_renewal').value = 1;
+        document.getElementById('subscription_tier').value = 'Individual';
+      } else if (type === 'atrisk') {
+        document.getElementById('user_id').value = 'SPOT-' + Math.floor(10000 + Math.random() * 90000);
+        document.getElementById('listening_hours').value = 6.0;
+        updateVal('hoursVal', '6.0 hrs');
+        document.getElementById('skip_rate').value = 0.45;
+        updateVal('skipVal', '45%');
+        document.getElementById('playlists_created').value = 2;
+        document.getElementById('days_since_login').value = 8;
+        document.getElementById('auto_renewal').value = 1;
+        document.getElementById('subscription_tier').value = 'Student';
+      } else if (type === 'churn') {
+        document.getElementById('user_id').value = 'SPOT-' + Math.floor(10000 + Math.random() * 90000);
+        document.getElementById('listening_hours').value = 1.0;
+        updateVal('hoursVal', '1.0 hrs');
+        document.getElementById('skip_rate').value = 0.85;
+        updateVal('skipVal', '85%');
+        document.getElementById('playlists_created').value = 0;
+        document.getElementById('days_since_login').value = 22;
+        document.getElementById('auto_renewal').value = 0;
+        document.getElementById('subscription_tier').value = 'Family';
+      }
+      submitPrediction(new Event('submit'));
+    }
+
+    async function submitPrediction(e) {
+      if (e) e.preventDefault();
+
+      const btn = document.getElementById('btnPredict');
+      btn.textContent = 'Scoring user...';
+      btn.disabled = true;
+
+      const payload = {
+        user_id: document.getElementById('user_id').value,
+        listening_hours_per_week: parseFloat(document.getElementById('listening_hours').value),
+        skip_rate: parseFloat(document.getElementById('skip_rate').value),
+        playlists_created: parseInt(document.getElementById('playlists_created').value),
+        days_since_last_login: parseInt(document.getElementById('days_since_login').value),
+        auto_renewal: parseInt(document.getElementById('auto_renewal').value),
+        subscription_tier: document.getElementById('subscription_tier').value
+      };
+
+      try {
+        const start = performance.now();
+        const response = await fetch('/predict', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        const latency = Math.round(performance.now() - start);
+
+        if (!response.ok) {
+          alert('Error: ' + JSON.stringify(data.detail || data));
+          return;
+        }
+
+        // Update UI elements
+        const probPercent = Math.round(data.renewal_probability * 100);
+        document.getElementById('probText').textContent = probPercent + '%';
+
+        const bar = document.getElementById('probBar');
+        bar.style.width = probPercent + '%';
+
+        const isRenew = data.prediction === 'Likely to Renew';
+        bar.style.backgroundColor = isRenew ? 'var(--spotify-green)' : 'var(--danger-red)';
+        document.getElementById('probText').style.color = isRenew ? 'var(--spotify-green)' : 'var(--danger-red)';
+
+        const badge = document.getElementById('predBadge');
+        badge.textContent = data.prediction;
+        badge.className = 'badge ' + (isRenew ? 'badge-renew' : 'badge-churn');
+
+        const risk = document.getElementById('riskBadge');
+        risk.textContent = 'Risk: ' + data.risk_level;
+        risk.style.color = data.risk_level === 'High' ? 'var(--danger-red)' : (data.risk_level === 'Medium' ? 'var(--warning-yellow)' : 'var(--spotify-green)');
+
+        document.getElementById('metaRequestId').textContent = data.request_id || response.headers.get('X-Request-ID') || 'Generated';
+        document.getElementById('metaLatency').textContent = latency + ' ms';
+
+      } catch (err) {
+        alert('Failed to connect to backend: ' + err.message);
+      } finally {
+        btn.textContent = 'Compute Churn Prediction';
+        btn.disabled = false;
+      }
+    }
+
+    // Auto-predict on initial page load
+    window.addEventListener('DOMContentLoaded', () => {
+      submitPrediction(null);
+    });
+  </script>
+</body>
+</html>
