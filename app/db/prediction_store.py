@@ -1,7 +1,10 @@
+import logging
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
+
+logger = logging.getLogger("spotify_churn_db")
 
 
 class PredictionStore:
@@ -79,4 +82,4 @@ class PredictionStore:
                 conn.commit()
         except Exception as e:
             # Prediction logging should never block or fail the user request
-            print(f"[Warning] Failed to log prediction to database: {e}")
+            logger.warning(f"Failed to log prediction to database: {e}")

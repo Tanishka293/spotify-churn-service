@@ -1,13 +1,15 @@
 import json
-import os
+import logging
 from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("spotify_churn_trainer")
 from sklearn.metrics import (
     accuracy_score,
-    classification_report,
     f1_score,
     precision_score,
     recall_score,
@@ -89,14 +91,14 @@ def build_pipeline() -> Pipeline:
 
 
 def train_model() -> None:
-    print("[1/4] Generating synthetic Spotify dataset...")
+    logger.info("[1/4] Generating synthetic Spotify dataset...")
     df = generate_spotify_data()
 
     data_dir = BASE_DIR / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
     dataset_path = data_dir / "spotify_churn_data.csv"
     df.to_csv(dataset_path, index=False)
-    print(f"      Saved {len(df)} records to {dataset_path}")
+    logger.info(f"Saved {len(df)} records to {dataset_path}")
 
     # Features and Target
     X = df.drop(columns=["user_id", "renewed_next_month"])
@@ -104,11 +106,11 @@ def train_model() -> None:
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-    print("[2/4] Training Scikit-Learn + XGBoost Pipeline...")
+    logger.info("[2/4] Training Scikit-Learn + XGBoost Pipeline...")
     pipeline = build_pipeline()
     pipeline.fit(X_train, y_train)
 
-    print("[3/4] Evaluating Model Performance...")
+    logger.info("[3/4] Evaluating Model Performance...")
     y_pred = pipeline.predict(X_test)
     y_prob = pipeline.predict_proba(X_test)[:, 1]
 
@@ -121,12 +123,12 @@ def train_model() -> None:
         "test_samples": len(y_test),
     }
 
-    print("\n========== Model Evaluation Metrics ==========")
+    logger.info("========== Model Evaluation Metrics ==========")
     for k, v in metrics.items():
-        print(f"  {k:15}: {v}")
-    print("===============================================\n")
+        logger.info(f"  {k:15}: {v}")
+    logger.info("===============================================")
 
-    print("[4/4] Serializing Artifacts & Metadata...")
+    logger.info("[4/4] Serializing Artifacts & Metadata...")
     artifacts_dir = BASE_DIR / "artifacts"
     artifacts_dir.mkdir(parents=True, exist_ok=True)
     model_path = artifacts_dir / "spotify_xgb_model.joblib"
@@ -136,8 +138,8 @@ def train_model() -> None:
     with open(metadata_path, "w") as f:
         json.dump(metrics, f, indent=2)
 
-    print(f"      Production pipeline saved to: {model_path}")
-    print(f"      Metadata saved to: {metadata_path}")
+    logger.info(f"Production pipeline saved to: {model_path}")
+    logger.info(f"Metadata saved to: {metadata_path}")
 
 
 if __name__ == "__main__":
